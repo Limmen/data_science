@@ -1,0 +1,4 @@
+target
+*.class
+.ensime_cache
+.ensime
