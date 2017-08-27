@@ -13,7 +13,7 @@
 %% records
 -record(tf_vector_entry, {tag_id :: tag_id(), tf :: tf()}).
 -record(model, {tag_ids :: tag_ids(), tf_idfs :: movie_tfidfs()}).
--record(movie_tfidf, {id :: movie_id(), tfidf :: tfidf()}).
+-record(movie_tfidf, {id :: movie_id(), tfidf :: tf_vector()}).
 -record(tag_id, {tag :: movie_tag(), id :: tag_id()}).
 -record(dataset, {movie_tags :: movie_id_tags(), movie_titles :: movie_id_titles(),
 		  user_ratings :: user_id_movie_ratings(), user_names :: user_id_names()}).
@@ -73,10 +73,35 @@
 tfidf_model(Dataset)->
     TagIds = tag_ids(Dataset#dataset.movie_tags),
     GlobalTF = tf(TagIds, Dataset#dataset.movie_tags),
+    Movies = sets:to_list(sets:from_list(Movies = lists:map(fun(M) -> #movie_id_title.id end, Dataset#dataset.movie_titles))),
+    MoviesTF = lists:map(fun(M) ->
+				 #movie_tfidf{id = M, tfidf = tf(TagIds, Dataset#dataset.movie_tags, M)}
+			 end, Movies),
+    GlobalIDF = idf(GlobalTF),
+    WeightedMoviesTags = idf(GlobalIDF, MoviesTF),
+    NormalizedWeightedMoviesTags = normalize(WeightedMoviesTags),
+    #model{tag_ids = TagIds, tf_idfs = NormalizedWeightedMoviesTags}.
+
+-spec normalize(movie_tfidfs()) -> tf_vector().
+normalize(MoviesIDF)->
     ok.
 
+-spec idf(tf_vector())-> tf_vector().
+idf(TFVector)->
+    ok.
+
+-spec idf(tf_vector(), movie_tfidfs())-> tf_vector().
+idf(GlobalIDF, MoviesTF)->
+    ok.
+
+-spec tf(tag_ids(), movie_id_tags()) -> tf_vector().
 tf(TagIds, MovieTags)->
     ok.
+-spec tf(tag_ids(), movie_id_tags(), movie_id()) -> tf_vector().
+tf(TagIds, MovieTags, Movie)->
+    FilteredTags = lists:filter(fun(MT) -> MT#movie_id_tag.id =:= Movie
+				end, MovieTags),
+    tf(TagIds, FilteredTags).
 
 -spec tag_ids(movie_id_tags()) -> tag_ids().
 tag_ids(MovieTags)->
