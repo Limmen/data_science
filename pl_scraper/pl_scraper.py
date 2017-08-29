@@ -2,6 +2,8 @@
 
 from bs4 import BeautifulSoup
 import requests
+import re
+import json
 
 
 def main():
@@ -9,25 +11,154 @@ def main():
     baseUrl = "http://www.emfootball.co.uk"
     linkPage = "oldleaguetables.html"
     Links = list(map(lambda relLink: baseUrl + "/" + relLink.get("href"), urls(baseUrl + "/" + linkPage)))
-    getTable(Links[0])
+    parsedData = list(map(parseLeaguePage, Links))
+    with open('result.json', 'w') as file:
+        json.dump(parsedData, file)
+    with open('test.json', 'w') as file:
+        json.dump(parsedData[0], file)
+    #print(str(parseLeaguePage(Links[13])))
 
 
-def getTable(url):
-    "get the league tables from a url"
-    print("Getting table from URL: " + url)
-    tablePage = requests.get(url)
-    tablePageSoup = BeautifulSoup(tablePage.text, "lxml")
-    tables = tablePageSoup.find_all("table")
-    print("Parsed " + str(len(tables)) + " tables")
-    leagueTable = filter(isTable, tables)
-    print("LeagueTable: " + LeagueTable.prettify())
+def parseLeaguePage(url):
+    ""
+    print("Parsing league page: " + url)
+    leaguePage = requests.get(url)
+    leaguePageSoup = BeautifulSoup(leaguePage.text, "lxml")
+    tables = leaguePageSoup.find_all("table")
+    #print("unfiltered tables: " + str(len(tables)))
+    filteredTables = list(filter(isTable, tables))
+    #print("filtered tables: " + str(len(filteredTables)))
+    titles = list(map(lambda h3: concatStrings(h3.strings), leaguePageSoup.find_all("h3")))
+    filteredTitles = list(filter(isLeagueTitle, titles))
+    year = parseYear(leaguePageSoup)
+    print("parsed year: " + str(year))
+    parsedTables = parseTables(filteredTables, filteredTitles, leaguePageSoup)
+    return {
+        "year": str(year),
+        "tables": parsedTables
+        }
+
+
+def parseYear(leaguePageSoup):
+    "parse year of page"
+    h2 = leaguePageSoup.find("h2")
+    if h2 is None:
+        h3 = leaguePageSoup.find_all("h3")
+        title = h3[0]  # First title
+        regex = re.compile(r'\d{4}/\d{1,4}')  # YYYY/YYYY
+        match = regex.search(title.font.string)
+        return match.group(0)
+    else:
+        title = h2
+        regex = re.compile(r'\d{4}/\d{1,4}')  # YYYY/YYYY
+        string = concatStrings(h2.strings)
+        match = regex.search(string)
+        return match.group(0)
+
+
+def isLeagueTitle(title):
+    "check if the given title is a league title or something else"
+    if title is None:
+        return False
+    regex = re.compile(r'\d{4}-\d{4}')
+    match = regex.search(title)
+    if match is None:
+        return False
+    return True
+
 
 def isTable(table):
     "check if the given table is a league-table"
-    for tr in table.find_all("tr"):
-        Texts = list(map(lambda th: th.text, tr.find_all("th")))
-        if "Pos" in Texts and "Team" in Texts:
-            return True
+    if len(table.find_all("table")) == 0:  # No nested tables should match
+#        print("td")
+        for tr in table.find_all("tr"):
+            Texts = list(map(lambda td: td.string, tr.find_all("td")))
+            if "Pts" in Texts and "Team" in Texts:
+                return True
+ #       print("th")
+        for tr in table.find_all("tr"):
+            Texts = list(map(lambda th: concatStrings(th.strings), tr.find_all("th")))
+            if ("Pts" in Texts or "\nPts") and ("Team" in Texts or "\nTeam" in Texts):
+                return True
+#    print("False")
+    return False
+
+
+def concatStrings(strings):
+    string = ""
+    for str in strings:
+        string = string + str
+    return string
+
+
+def parseTables(tables, titles, leaguePageSoup):
+    #print("tables size: " + str(len(tables)) + " titles size: " + str(len(titles)))
+    if(len(titles) == 0):
+        return parseTablesWithTitles(tables, leaguePageSoup)
+    parsedTables = list()
+    for i in range(0, len(tables)-1):
+        table = parseTable(tables[i], titles[i])
+        parsedTables.append(table)
+    return parsedTables
+
+
+def parseTablesWithTitles(tables, leaguePageSoup):
+    #print("tables size: " + str(len(tables)))
+    parsedTables = list()
+    for table in tables:
+        parsedTables.append(parseTableWithTitle(table, leaguePageSoup))
+    return parsedTables
+
+
+def parseTable(table, title):
+    "parse HTML table into key-value map"
+    rows = table.findAll("tr")
+    rows.pop(0)  # First two rows are headers
+    colRow = rows.pop(0)
+    cols = list(map(lambda col: concatStrings(col.strings), colRow.find_all("td")))
+    if(len(cols) == 0):
+        cols = list(map(lambda col: concatStrings(col.strings), colRow.find_all("th")))
+    parsedRows = list(map(parseRow, [(row, cols) for row in rows]))
+    #parsedRows = list(map(parseRow, rows))
+    return {
+        "title": title,
+        "tableRows": parsedRows
+    }
+
+
+def parseTableWithTitle(table, leaguePageSoup):
+    "parse HTML table into key-value map"
+    rows = table.findAll("tr")
+    Texts = list(map(lambda td: concatStrings(td.strings), rows[0].find_all("td")))
+    title = "missing"
+    if("Home" in Texts or "Away" in Texts or "\nHome" in Texts or "\nAway" in Texts):
+            titlesh3 = list(map(lambda h3: h3.font, leaguePageSoup.find_all("h3")))
+            filteredh3Titles = list(filter(isLeagueTitle, titlesh3))
+            if(len(filteredh3Titles) == 0):
+                titlesh2 = list(map(lambda h2: concatStrings(h2.strings), leaguePageSoup.find_all("h2")))
+                title = titlesh2[0]
+            else:
+                title = filteredh3Titles[0]
+    else:
+        title = concatStrings(rows[0].strings)
+    #print("title: " + title)
+    rows.pop(0)  # First two rows are headers
+    colRow = rows.pop(0)
+    cols = list(map(lambda col: concatStrings(col.strings), colRow.find_all("td")))
+    if(len(cols) == 0):
+        cols = list(map(lambda col: concatStrings(col.strings), colRow.find_all("th")))
+    parsedRows = list(map(parseRow, [(row, cols) for row in rows]))
+    return {
+        "title": title,
+        "tableRows": parsedRows
+    }
+
+
+def parseRow(rowCols):
+    row, cols = rowCols
+    "parse row of HTML table into dict"
+    cells = row.findAll("td")
+    return {cols[i]: concatStrings(cells[i].strings) for i in range(len(cells))}
 
 
 def urls(url):
