@@ -1,9 +1,9 @@
 # erl_knearest_neighbor
 
-## About 
-Implementation of K-Nearest Neighbor algorithm in Erlang. 
+## About
+Implementation of K-Nearest Neighbor algorithm in Erlang.
 
-Classifies a dataset of plaing/notplaying tennis based on weather conditions.
+Classifies a dataset of playing/not-playing tennis based on weather conditions.
 
 ## How to run
 
@@ -19,7 +19,7 @@ erl_knearest_neighbor:classify(4, [{outlook, rain}], Examples).
 
 MIT
 
-## Author 
+## Author
 
 Kim Hammar <kimham@kth.se>
 

@@ -1,10 +1,10 @@
 # erl_naive_bayes
 
-## About 
+## About
 
 Implementation of the Naive Bayes Classifier in Erlang.
 
-Classifies a dataset of plaing/notplaying tennis based on weather conditions.
+Classifies a dataset of playing/not-playing tennis based on weather conditions.
 
 ## How to run
 
@@ -21,7 +21,7 @@ erl_naive_bayes:classify(Model, [{outlook, sunny}, {humidity, high}]).
 
 MIT
 
-## Author 
+## Author
 
 Kim Hammar <kimham@kth.se>
 

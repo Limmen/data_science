@@ -1,10 +1,10 @@
 # erl_id3_dectree
 
-## About 
+## About
 
 Implementation of the ID3 Decision tree Algorithm in Erlang.
 
-Classifies a dataset of plaing/notplaying tennis based on weather conditions.
+Classifies a dataset of playing/not-playing tennis based on weather conditions.
 
 ## How to run
 
@@ -20,7 +20,7 @@ erl_id3_dectree:generalize(Tree, [{outlook, overcast}, {temperature, hot}, {humi
 
 MIT
 
-## Author 
+## Author
 
 Kim Hammar <kimham@kth.se>
 
