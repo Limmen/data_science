@@ -1,3 +1,4 @@
+# Author and Copyrights: Kim Hammar <kimham@kth.se> 2017
 # Web scraper for PL-tables. http://www.emfootball.co.uk/oldleaguetables.html
 
 from bs4 import BeautifulSoup
@@ -16,18 +17,15 @@ def main():
         json.dump(parsedData, file)
     with open('test.json', 'w') as file:
         json.dump(parsedData[0], file)
-    #print(str(parseLeaguePage(Links[13])))
 
 
 def parseLeaguePage(url):
-    ""
+    "Parsres a league page"
     print("Parsing league page: " + url)
     leaguePage = requests.get(url)
     leaguePageSoup = BeautifulSoup(leaguePage.text, "lxml")
     tables = leaguePageSoup.find_all("table")
-    #print("unfiltered tables: " + str(len(tables)))
     filteredTables = list(filter(isTable, tables))
-    #print("filtered tables: " + str(len(filteredTables)))
     titles = list(map(lambda h3: concatStrings(h3.strings), leaguePageSoup.find_all("h3")))
     filteredTitles = list(filter(isLeagueTitle, titles))
     year = parseYear(leaguePageSoup)
@@ -70,21 +68,19 @@ def isLeagueTitle(title):
 def isTable(table):
     "check if the given table is a league-table"
     if len(table.find_all("table")) == 0:  # No nested tables should match
-#        print("td")
         for tr in table.find_all("tr"):
             Texts = list(map(lambda td: td.string, tr.find_all("td")))
             if "Pts" in Texts and "Team" in Texts:
                 return True
- #       print("th")
         for tr in table.find_all("tr"):
             Texts = list(map(lambda th: concatStrings(th.strings), tr.find_all("th")))
             if ("Pts" in Texts or "\nPts") and ("Team" in Texts or "\nTeam" in Texts):
                 return True
-#    print("False")
     return False
 
 
 def concatStrings(strings):
+    "Helper function to concat a list of strings"
     string = ""
     for str in strings:
         string = string + str
@@ -92,7 +88,7 @@ def concatStrings(strings):
 
 
 def parseTables(tables, titles, leaguePageSoup):
-    #print("tables size: " + str(len(tables)) + " titles size: " + str(len(titles)))
+    "Parses tables without titles"
     if(len(titles) == 0):
         return parseTablesWithTitles(tables, leaguePageSoup)
     parsedTables = list()
@@ -103,7 +99,7 @@ def parseTables(tables, titles, leaguePageSoup):
 
 
 def parseTablesWithTitles(tables, leaguePageSoup):
-    #print("tables size: " + str(len(tables)))
+    "parse tables which have titles"
     parsedTables = list()
     for table in tables:
         parsedTables.append(parseTableWithTitle(table, leaguePageSoup))
@@ -119,7 +115,6 @@ def parseTable(table, title):
     if(len(cols) == 0):
         cols = list(map(lambda col: concatStrings(col.strings), colRow.find_all("th")))
     parsedRows = list(map(parseRow, [(row, cols) for row in rows]))
-    #parsedRows = list(map(parseRow, rows))
     return {
         "title": title,
         "tableRows": parsedRows
@@ -127,7 +122,7 @@ def parseTable(table, title):
 
 
 def parseTableWithTitle(table, leaguePageSoup):
-    "parse HTML table into key-value map"
+    "parse HTML table with title into key-value map"
     rows = table.findAll("tr")
     Texts = list(map(lambda td: concatStrings(td.strings), rows[0].find_all("td")))
     title = "missing"
@@ -141,7 +136,6 @@ def parseTableWithTitle(table, leaguePageSoup):
                 title = filteredh3Titles[0]
     else:
         title = concatStrings(rows[0].strings)
-    #print("title: " + title)
     rows.pop(0)  # First two rows are headers
     colRow = rows.pop(0)
     cols = list(map(lambda col: concatStrings(col.strings), colRow.find_all("td")))
@@ -155,8 +149,8 @@ def parseTableWithTitle(table, leaguePageSoup):
 
 
 def parseRow(rowCols):
-    row, cols = rowCols
     "parse row of HTML table into dict"
+    row, cols = rowCols
     cells = row.findAll("td")
     return {cols[i]: concatStrings(cells[i].strings) for i in range(len(cells))}
 

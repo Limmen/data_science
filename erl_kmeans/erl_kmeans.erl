@@ -2,6 +2,14 @@
 %% @author Kim Hammar <kimham@kth.se>
 %% @copyright (C) 2017, Kim Hammar
 %% @doc erl_kmeans.erl
+%% K-Means partitions the dataset into K clusters where each datapoint
+%% belong to the cluster which has a mean that most resembles its own value
+%% The algorithm iteratively works as follows.
+%% 1. Start with K initial cluster-centers
+%% 2. For each cluster center (K), compute all items which are closer to
+%% that center than any othe center.
+%% 3. For each cluster center (K) take the mean of the points that belong to it
+%% 4. Repeat step 2 and 3 with the new centers being the computed mean-values.
 %% Example use-case:
 %% > c(erl_kmeans).
 %% > Data = erl_kmeans:read_data("sample_kmeans_data.txt").

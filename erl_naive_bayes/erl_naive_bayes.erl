@@ -2,6 +2,24 @@
 %% @author Kim Hammar <kimham@kth.se>
 %% @copyright (C) 2017, Kim Hammar
 %% @doc erl_naive_bayes.erl
+%% Naive Bayes means that the simplifying assumption that the value of
+%% a particular feature is independent of the values of other features.
+%% Learning in NaiveBayes essentially means to construct the Frequency-table,
+%% the likelihood-table and the conditional-probability table (based on the observations in likelihood table)
+%% the conditional probability contains probabilities P(attribute|class)
+%% To generalize/classify: calculate posterior probability based on the "evidence" of the data to be classified.
+%% Pick the classification with the highest posterior probability.
+%% To compute the posterior probability we use the frequency table, the likelihood table and the conditional
+%% probability table which all were constructed during training based on training data.
+%% The naive thing with the classifier is that we assume that all atrtributes are independent and thus to
+%% calculate the posterior probability given a set of evidence-attributes we can take the product. This is
+%% naive because it is likely that the attributes are not independent in reality, but it makes it much simpler
+%% to compute.
+%% FrequencyTable is a table of {attribute, AttributeTable} where AttirbuteTable is a list of all observed values of
+%% the attribute and its corresponding classification in the training set.
+%% LikelihoodTable is a table of {{attribute, Value}, Probability} or {{classification}, Probability} based on the training data.
+%% ConditionalProbabilityTable is a table of {{attribute, value}, Class, Probability}, i.e the probabiliy of attribute value given
+%% classification. Based on training data.
 %% Example use-case:
 %% > c(erl_naive_bayes).
 %% > Examples = erl_naive_bayes:examples_play_tennis().

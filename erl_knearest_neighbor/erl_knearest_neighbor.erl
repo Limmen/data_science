@@ -2,6 +2,16 @@
 %% @author Kim Hammar <kimham@kth.se>
 %% @copyright (C) 2017, Kim Hammar
 %% @doc erl_knearest_neighbor.erl
+%% K-nearest neighbors classifies a datapoint to the class of
+%% its nearest neighbors among previous data.
+%% K-nearest neighbors is lazy and requires to training. To classify a new datapoint the
+%% algorithm calculates the distance between the datapoint and all records in the dataset.
+%% In this program the data is symbolic so the distnace is computed by taking the overlap-distance.
+%% After computing the distance to all data-records, the neighborhood is selected by taking the K-nearest
+%% records. Finally the class is selected by computing the weighted-sum of classes in the neighborhood.
+%% Weighted sum means that the closest neighbors have the highest weight, the least clost neighbors have the
+%% lowest neighbor. Given the weighted-sum of all classes, the class with most weight is selected.
+%% between the two attribute-sets.
 %% Example use-case:
 %% > c(erl_knearest_neighbor).
 %% > Examples = erl_knearest_neighbor:examples_play_tennis().

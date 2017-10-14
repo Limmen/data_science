@@ -1,7 +1,15 @@
-# Data Science - ?
+# Data Science Demos
 
 ## About
 
 Simple demos of the big ideas in data science. Including Data mining, machine learning, NLP
 
-Made by a beginner in the field, for educational purpose.
+## How to run
+
+See separate README for each project
+
+## Author 
+
+Kim Hammar <kimham@kth.se>
+
+2017

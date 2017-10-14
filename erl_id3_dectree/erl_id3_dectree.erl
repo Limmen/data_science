@@ -2,6 +2,16 @@
 %% @author Kim Hammar <kimham@kth.se>
 %% @copyright (C) 2017, Kim Hammar
 %% @doc erl_id3_dectree.erl
+%% ID3 Algorithm creates a decision tree for classification based on labeled
+%% training data. It creates the tree top-down and selects the attribute to split on
+%% which gives most information. The measure for information is entropy. The tree
+%% is created recursively and at each step we compute the attribute to split on based on
+%% entropy measure of the attributes that have not yet split. In each node the attribute with
+%% the highest information gain is selected and branches for each value of the attribute is created
+%% and nodes for the branches are computed in the same manner recursively.
+%% The tree is on the format {node, attribute, Children} where children is a list of child nodes
+%% or branches. A branch is {branch, decision, childNode}.
+%% The computed decision tree can be printed as a set of IF-THEN rules.
 %% Example use-case:
 %% erl
 %% > c(erl_id3_dectree).
