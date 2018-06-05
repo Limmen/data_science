@@ -6,6 +6,21 @@ import requests
 import re
 import json
 
+teams_normalize = {}
+teams_normalize["Birmingham City (R)"] = "Birmingham City"
+teams_normalize["Blackpool (R)"] = "Blackpool"
+teams_normalize["Burnley (R)"] = "Burnley"
+teams_normalize["Chelsea (C)"] = "Chelsea"
+teams_normalize["Hull City (R)"] = "Hull City"
+teams_normalize["Manchester United\r\n   (C)"] = "Manchester United"
+teams_normalize["Manchester United (C)"] = "Manchester United"
+teams_normalize["Portsmouth (R)"] = "Portsmouth"
+teams_normalize["Sunderland (R)"] = "Sunderland"
+teams_normalize["Tottenham Hotspur"] = "Tottenham Hotspurs"
+teams_normalize["West Bromwich Albion (R)"] = "West Bromwich Albion"
+teams_normalize["West Ham United (R)"] = "West Ham United"
+teams_normalize["Wigan Athletic"] = "Wigan"
+teams_normalize["Ipswich"] = "Ipswich Town"
 
 def main():
     "Entrypoint of the scraper"
@@ -47,7 +62,6 @@ def parseYear(leaguePageSoup):
         match = regex.search(title.font.string)
         return match.group(0)
     else:
-        title = h2
         regex = re.compile(r'\d{4}/\d{1,4}')  # YYYY/YYYY
         string = concatStrings(h2.strings)
         match = regex.search(string)
@@ -125,7 +139,6 @@ def parseTableWithTitle(table, leaguePageSoup):
     "parse HTML table with title into key-value map"
     rows = table.findAll("tr")
     Texts = list(map(lambda td: concatStrings(td.strings), rows[0].find_all("td")))
-    title = "missing"
     if("Home" in Texts or "Away" in Texts or "\nHome" in Texts or "\nAway" in Texts):
             titlesh3 = list(map(lambda h3: h3.font, leaguePageSoup.find_all("h3")))
             filteredh3Titles = list(filter(isLeagueTitle, titlesh3))
@@ -152,7 +165,24 @@ def parseRow(rowCols):
     "parse row of HTML table into dict"
     row, cols = rowCols
     cells = row.findAll("td")
-    return {cols[i]: concatStrings(cells[i].strings) for i in range(len(cells))}
+    parsed_row = {}
+    for i in range(len(cells)):
+        col = cols[i].strip("\n").strip("\t")
+        values = concatStrings(cells[i].strings).strip("\n").strip("\t")
+        if col == "Team":
+            if values in teams_normalize:
+                values = teams_normalize[values]
+        if col not in parsed_row:
+            if values.isdigit():
+                parsed_row[col] = int(values)
+            else:
+                parsed_row[col] = values
+        else:
+            parsed_row[col] = int(parsed_row[col]) + int(values)
+    if "GD" not in parsed_row:
+        GD = parsed_row["F"] - parsed_row["A"]
+        parsed_row["GD"] = GD
+    return parsed_row
 
 
 def urls(url):
